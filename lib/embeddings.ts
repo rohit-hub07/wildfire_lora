@@ -6,7 +6,7 @@ let genAI: GoogleGenAI | null = null;
  * Deterministic pseudo-embedding generator fallback if GEMINI_API_KEY is not configured
  * Produces a 768-dimensional normalized float vector from text.
  */
-function generateFallbackEmbedding(text: string, dimensions: number = 768): number[] {
+function generateFallbackEmbedding(text: string, dimensions: number = 3072): number[] {
   const vector = new Array(dimensions).fill(0);
   for (let i = 0; i < text.length; i++) {
     const charCode = text.charCodeAt(i);
@@ -29,11 +29,11 @@ export async function generateEmbedding(text: string): Promise<number[]> {
     }
 
     if (!genAI) {
-      genAI = new GoogleGenAI({ apiKey });
+      genAI = new GoogleGenAI({ apiKey, apiVersion: "v1" });
     }
 
     const result = await genAI.models.embedContent({
-      model: "gemini-embedding-004",
+      model: "gemini-embedding-2",
       contents: text,
     });
 

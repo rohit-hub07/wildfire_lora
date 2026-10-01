@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "generate-demo": "tsx scripts/generateDemoData.ts",
-    "seed-knowledge": "tsx scripts/seedKnowledge.ts"
+    "seed-knowledge": "tsx scripts/seedKnowledge.ts",
+    "postinstall": "node scripts/fixChromaPackaging.cjs"
   },
   "dependencies": {
     "@chroma-core/default-embed": "^0.1.9",
@@ -36,6 +37,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.7",
+    "ignore-loader": "^0.1.2",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.9.3"
