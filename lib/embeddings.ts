@@ -2,11 +2,16 @@ import { GoogleGenAI } from "@google/genai";
 
 let genAI: GoogleGenAI | null = null;
 
+export const EMBEDDING_DIMENSIONS = 768;
+
 /**
  * Deterministic pseudo-embedding generator fallback if GEMINI_API_KEY is not configured
  * Produces a 768-dimensional normalized float vector from text.
+ * NOTE: Must stay in sync with EMBEDDING_DIMENSIONS and the `outputDimensionality`
+ * requested from Gemini, otherwise ChromaDB rejects upserts with:
+ * "Collection expecting embedding with dimension of X, got Y".
  */
-function generateFallbackEmbedding(text: string, dimensions: number = 3072): number[] {
+function generateFallbackEmbedding(text: string, dimensions: number = EMBEDDING_DIMENSIONS): number[] {
   const vector = new Array(dimensions).fill(0);
   for (let i = 0; i < text.length; i++) {
     const charCode = text.charCodeAt(i);
@@ -19,12 +24,15 @@ function generateFallbackEmbedding(text: string, dimensions: number = 3072): num
 }
 
 /**
- * Generate embedding vector for a given text string using gemini-embedding-004
+ * Generate embedding vector for a given text string.
+ * Uses `gemini-embedding-001` with outputDimensionality locked to
+ * EMBEDDING_DIMENSIONS so live and fallback vectors always match
+ * the ChromaDB collection dimension.
  */
 export async function generateEmbedding(text: string): Promise<number[]> {
   try {
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey || apiKey === "dummy_or_your_gemini_api_key_here") {
+    if (!apiKey || apiKey === "dummy_or_your_gemini_api_key_here" || !apiKey.startsWith("AIza")) {
       return generateFallbackEmbedding(text);
     }
 
@@ -33,8 +41,11 @@ export async function generateEmbedding(text: string): Promise<number[]> {
     }
 
     const result = await genAI.models.embedContent({
-      model: "gemini-embedding-2",
+      model: "gemini-embedding-001",
       contents: text,
+      config: {
+        outputDimensionality: EMBEDDING_DIMENSIONS,
+      } as any,
     });
 
     if (result.embeddings && result.embeddings[0]?.values) {

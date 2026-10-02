@@ -87,7 +87,9 @@ export async function addDocumentToVectorStore(
       return;
     }
   } catch (e) {
-    console.warn(`ChromaDB unreachable for add (${collectionName}), saving in-memory vector fallback.`);
+    // Log the real cause: "unreachable" hides dimension mismatches like
+    // "Collection expecting embedding with dimension of 768, got 3072".
+    console.warn(`ChromaDB unreachable for add (${collectionName}), saving in-memory vector fallback. Cause:`, (e as Error)?.message ?? e);
   }
 
   upsertInMemory(collectionName, { id, document, embedding: vector, metadata });
@@ -132,7 +134,7 @@ export async function queryVectorStore(
       }
     }
   } catch (e) {
-    console.warn(`ChromaDB unreachable for query (${collectionName}), falling back to memory vector search.`);
+    console.warn(`ChromaDB unreachable for query (${collectionName}), falling back to memory vector search. Cause:`, (e as Error)?.message ?? e);
   }
 
   // In memory cosine similarity fallback
